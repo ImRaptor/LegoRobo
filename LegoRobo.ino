@@ -16,7 +16,10 @@ Servo leftFoot, leftLeg, rightFoot, rightLeg;
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
-void movePart(Servo tarServ, int amount);
+void movePart(Servo tarServ, int amount, int direct=1, int spd=1);
+void shakeLeg(Servo oneFoot, Servo twoFoot, Servo oneLeg, Servo twoLeg, int direct=1);
+void forwardStep();
+void dance();
 
 void setup()
 {
@@ -89,6 +92,9 @@ void loop()
       //Serial.print(leftLeg.read());
       //Serial.print('\n');
     }
+    else if (inputString[0] == 'd'){
+      dance();
+    }
     
     stringComplete = false; 
     inputString = "";
@@ -105,15 +111,14 @@ void serialEvent() {
    }
 }
 
-void movePart(Servo tarServ, int amount){
-  int direct = 1;
+void movePart(Servo tarServ, int amount,int direct, int spd){
   if (amount < 0){
-    direct = -1;
+    direct = -1*direct;
   }
   int hold = tarServ.read();
-  for (int i = 0; i <= abs(amount); i++){
+  for (int i = 0; i <= abs(amount); i=i+spd){
     tarServ.write(hold+(byte(i)*direct));
-    //Serial.print(i);
+    //Serial.print(spd);
     //Serial.print(':');
     //Serial.print(amount);
     //Serial.print('\n');
@@ -144,21 +149,21 @@ void forwardStep(){
   //movePart(leftLeg, -15);      // RF +00 RL +00 LF +00 LL +00
 }
 
-/**
-* Unused
-void leftStep(){
-  movePart(leftFoot, -10);      
-  movePart(rightFoot, -10);     
-  movePart(leftFoot, -20);      
-  movePart(rightFoot, 10);    
-  movePart(leftLeg, 15);      
-  movePart(leftFoot, 30);     
-  movePart(rightFoot, 10);    
-  movePart(leftFoot, 10);     
-  movePart(rightFoot, 20);    
-  movePart(leftFoot, -10);     
-  movePart(leftLeg, -15);      
-  movePart(rightLeg, -15);     
-  movePart(rightFoot, -30);    
-  movePart(rightLeg, 15);    
-}**/
+void shakeLeg(Servo oneFoot, Servo twoFoot, Servo oneLeg, Servo twoLeg, int direct){
+  // Lift foot
+  movePart(oneFoot, 10, direct, 2);
+  movePart(twoFoot, 10, direct, 2);
+  movePart(oneFoot, 20, direct, 2);
+  movePart(twoFoot, -10, direct, 2);
+  // Shake Leg
+  movePart(twoLeg, 30, direct, 2);
+  movePart(twoLeg, -60, direct, 2);
+  movePart(twoLeg, 30, direct, 2);
+  // Back to centre
+  movePart(oneFoot, -30, direct, 2);
+}
+
+void dance(){
+ shakeLeg(rightFoot, leftFoot, rightLeg, leftLeg, 1);
+ shakeLeg(leftFoot, rightFoot, leftLeg, rightLeg, -1);
+}
