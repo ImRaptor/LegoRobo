@@ -16,10 +16,11 @@ Servo leftFoot, leftLeg, rightFoot, rightLeg;
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
-void movePart(Servo tarServ, int amount, int direct=1, int spd=1);
-void shakeLeg(Servo oneFoot, Servo twoFoot, Servo oneLeg, Servo twoLeg, int direct=1);
-void forwardStep();
 void dance();
+void forwardStep();
+void movePart(Servo tarServ, int amount, int direct=1, int spd=2);
+void rightTilt();
+void shakeLeg(Servo oneFoot, Servo twoFoot, Servo oneLeg, Servo twoLeg, int direct=1);
 
 void setup()
 {
@@ -44,45 +45,7 @@ void loop()
 {
   if (stringComplete) {
     // Which leg?
-    if (inputString[0] == 'r'){
-      // Which segment
-      if (inputString[1] == 'f'){
-        // Up or Down
-        if (inputString[2] == 'u'){
-          movePart(rightFoot, 30);
-        }
-        else if (inputString[2] == 'd'){
-          movePart(rightFoot, -30);      
-        }
-      }
-      else if (inputString[1] == 'l'){
-        if (inputString[2] == 'u'){
-          movePart(rightLeg, 10);
-        }
-        else if (inputString[2] == 'd'){
-          movePart(rightLeg, -10);
-        }
-      }
-    }
-    else if (inputString[0] == 'l'){
-      if (inputString[1] == 'f'){
-        if (inputString[2] == 'u'){
-          movePart(leftFoot, -30);
-        }
-        else if (inputString[2] == 'd'){
-          movePart(leftFoot, 30);
-        }
-      }
-      else if(inputString[1] == 'l'){
-        if (inputString[2] == 'u'){
-          movePart(leftLeg, -10);
-        }
-        else if (inputString[2] == 'd'){
-          movePart(leftLeg, 10);
-        }
-      }
-    }
-    else if (inputString[0] == 'm'){
+    if (inputString[0] == 'm'){
       for (byte i = 0; i < 5; i++){
         forwardStep();
         //leftStep();
@@ -94,6 +57,11 @@ void loop()
     }
     else if (inputString[0] == 'd'){
       dance();
+    }
+    else if (inputString[0] == 't'){
+      for (int i = 0; i <10 ; i++){
+        rightTilt();
+      }
     }
     
     stringComplete = false; 
@@ -111,22 +79,9 @@ void serialEvent() {
    }
 }
 
-void movePart(Servo tarServ, int amount,int direct, int spd){
-  if (amount < 0){
-    direct = -1*direct;
-  }
-  int hold = tarServ.read();
-  for (int i = 0; i <= abs(amount); i=i+spd){
-    tarServ.write(hold+(byte(i)*direct));
-    //Serial.print(spd);
-    //Serial.print(':');
-    //Serial.print(amount);
-    //Serial.print('\n');
-    delay(20);
-  }
-  //Serial.print(tarServ.read());
-  //Serial.print('\n');
-  //Serial.print("Done\n");
+void dance(){
+ shakeLeg(rightFoot, leftFoot, rightLeg, leftLeg, 1);
+ shakeLeg(leftFoot, rightFoot, leftLeg, rightLeg, -1);
 }
 
 void forwardStep(){
@@ -149,21 +104,56 @@ void forwardStep(){
   //movePart(leftLeg, -15);      // RF +00 RL +00 LF +00 LL +00
 }
 
-void shakeLeg(Servo oneFoot, Servo twoFoot, Servo oneLeg, Servo twoLeg, int direct){
-  // Lift foot
-  movePart(oneFoot, 10, direct, 2);
-  movePart(twoFoot, 10, direct, 2);
-  movePart(oneFoot, 20, direct, 2);
-  movePart(twoFoot, -10, direct, 2);
-  // Shake Leg
-  movePart(twoLeg, 30, direct, 2);
-  movePart(twoLeg, -60, direct, 2);
-  movePart(twoLeg, 30, direct, 2);
-  // Back to centre
-  movePart(oneFoot, -30, direct, 2);
+void movePart(Servo tarServ, int amount,int direct, int spd){
+  if (amount < 0){
+    direct = -1*direct;
+  }
+  int hold = tarServ.read();
+  for (int i = 0; i <= abs(amount); i=i+spd){
+    tarServ.write(hold+(byte(i)*direct));
+    //Serial.print(spd);
+    //Serial.print(':');
+    //Serial.print(amount);
+    //Serial.print('\n');
+    delay(20);
+  }
+  //Serial.print(tarServ.read());
+  //Serial.print('\n');
+  //Serial.print("Done\n");
 }
 
-void dance(){
- shakeLeg(rightFoot, leftFoot, rightLeg, leftLeg, 1);
- shakeLeg(leftFoot, rightFoot, leftLeg, rightLeg, -1);
+void rightTilt(){
+  int lpos = leftFoot.read();
+  int rpos = rightFoot.read();
+  for (int i = 0; i<= 5; ++i){
+    //Serial.print(lpos);
+    //Serial.print(' ');
+    lpos -= byte(5);
+    rpos += byte(5);
+    rightFoot.write(rpos);
+    leftFoot.write(lpos);
+    delay(20);
+  }
+  for (int i = 5; i>= 0; --i){
+    lpos += byte(5);
+    rpos -= byte(5);
+    rightFoot.write(rpos);
+    leftFoot.write(lpos);
+    delay(20);
+  }
+  //Serial.print('\n');
+}
+
+void shakeLeg(Servo oneFoot, Servo twoFoot, Servo oneLeg, Servo twoLeg, int direct){
+  // Lift foot
+  movePart(oneFoot, 9, direct, 3);
+  movePart(twoFoot, 9, direct, 3);
+  movePart(oneFoot, 21, direct, 3);
+  movePart(twoFoot, -9, direct, 3);
+  // Shake Leg
+  movePart(twoLeg, 30, direct, 3);
+  movePart(twoLeg, -60, direct, 3);
+  movePart(twoLeg, 30, direct, 3);
+  // Back to centre
+  movePart(oneFoot, -30, direct, 3);
 }
